@@ -3,7 +3,7 @@
 Mississippi ELPT / ELPA21-style **reading practice platform** for English learners, K–12.
 Built by EL Publishing · Richard A. Daniel, M.Ed., ENL/EL Specialist, Laurel High School.
 
-**Live site:** https://radan55.github.io/elpa21-reading-studio/
+**Live site:** https://radan55.github.io/RichardDaniel/elpa21-reading-studio/
 
 ## What it does
 - Six grade bands (K, 1, 2–3, 4–5, 6–8, 9–12) · 122 original items · 22 Mississippi-rooted texts
