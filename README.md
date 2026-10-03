@@ -3,7 +3,7 @@
 Mississippi ELPT / ELPA21-style **reading practice platform** for English learners, K–12.
 Built by EL Publishing · Richard A. Daniel, M.Ed., ENL/EL Specialist, Laurel High School.
 
-**Live site:** https://radan55.github.io/RichardDaniel/elpa21-reading-studio/
+**Live site:** https://radan55.github.io/elpa21-reading-studio/
 
 ## What it does
 - Six grade bands (K, 1, 2–3, 4–5, 6–8, 9–12) · 122 original items · 22 Mississippi-rooted texts
@@ -13,6 +13,7 @@ Built by EL Publishing · Richard A. Daniel, M.Ed., ENL/EL Specialist, Laurel Hi
 - Bilingual EN/ES directions and tap-to-see glossary (auto-off in mock mode)
 - Estimated Level 1–5, score reports by ELP standard / skill / item type, XP, streaks, badges, certificates
 - Teacher dashboard: class codes, report-code import, roster, mastery heatmap, item analysis, CSV export, JSON backup
+- **Study Center (remediation, v1.1):** every reading skill has study links — built-in YouTube/Khan searches in English and Spanish plus teacher-added videos, docs or sites. A student's skills under 70% rise to the top as focus skills; the score report shows "Study this skill" for the session's lowest skill; YouTube links play inside the Studio; each skill ends in a one-click Skill Drill. Teachers manage links in the Teacher → Remediation tab and share them to every device with one link (`#rem=…`), or export/import JSON.
 
 ## Deploy
 Single self-contained `index.html`. Settings → Pages → Deploy from branch (`main`, `/root`).

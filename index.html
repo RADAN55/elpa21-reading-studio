@@ -284,6 +284,17 @@ body.contrast-dark .tabs button.active{color:var(--gold-2)}
   .test{position:static}
 }
 
+
+/* remediation center */
+.rem-card summary{cursor:pointer;list-style:none}.rem-card summary::-webkit-details-marker{display:none}
+.rem-card summary .row{align-items:center}.rem-card[open] summary{border-bottom:1px solid var(--line);padding-bottom:.6rem;margin-bottom:.4rem}
+.rem-list{list-style:none;margin:.3rem 0 0;padding:0}
+.rem-link{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem;padding:.55rem 0;border-bottom:1px dashed var(--line)}
+.rem-link:last-child{border-bottom:0}
+.rem-main{flex:1;min-width:220px}.rem-main a{font-weight:700;text-decoration:none}.rem-main a:hover{text-decoration:underline}
+.rem-lang{display:inline-block;font-size:.65rem;font-weight:800;letter-spacing:.08em;padding:.1rem .4rem;border-radius:4px;background:var(--gold-soft);color:var(--navy);margin-right:.5rem;vertical-align:middle}
+.rem-embed{flex-basis:100%;aspect-ratio:16/9;margin-top:.4rem}.rem-embed iframe{width:100%;height:100%;border:0;border-radius:8px}
+.pill.ok{background:#e3f4e8;color:#1b7a3c;border-color:#bfe3c9}.pill.bad{background:#fde8e8;color:#a32020;border-color:#f3c2c2}
 </style>
 </head>
 <body>
@@ -298,7 +309,7 @@ body.contrast-dark .tabs button.active{color:var(--gold-2)}
    style of ELPA21 / Mississippi ELPT reading tasks. They are not released
    or secure test items. Level estimates are practice estimates only.
    ============================================================ */
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.1.0";
 const BANDS = [
   { id:"K",    label:"Kindergarten", short:"K",    desc:"Picture-supported words, read-along sentences, short stories", items:14, pace:25 },
   { id:"1",    label:"Grade 1",      short:"1",    desc:"Sentences, word match, short stories and school notes",        items:16, pace:30 },
@@ -361,7 +372,7 @@ const BADGES = [
 ];
 const I18N = {
   en: {
-    tag:"Many Voices · One Storm", student:"Student", teacher:"Teacher", about:"About & Alignment", progress:"My Progress",
+    tag:"Many Voices · One Storm", student:"Student", teacher:"Teacher", about:"About & Alignment", progress:"My Progress", remed:"Study Center", studyThis:"Study this skill", focusSkills:"Your focus skills", allSkills:"All reading skills", noFocus:"No focus skills yet — complete a session and the skills you miss will appear here.", watchHere:"Watch here", openLink:"Open", drill:"Practice: Skill Drill", teacherPicks:"Teacher picks", moreHelp:"More help", remedIntro:"Pick a skill you missed. Watch, read, then run a Skill Drill to show you have it.",
     welcome:"ELPA21 Reading Studio", sub:"Mississippi ELPT-style reading practice for English learners, K–12",
     name:"Your name", code:"Class code (optional)", band:"Choose your grade band", mode:"Choose a session",
     start:"Start session", next:"Next", back:"Back", flag:"Flag for review", unflag:"Flagged", review:"Review", submit:"Submit test", finish:"Finish",
@@ -385,7 +396,7 @@ const I18N = {
     skill:"Skill", standard:"Standard", type:"Type", dok:"DOK", seeAll:"See all", lv:"Level"
   },
   es: {
-    tag:"Muchas voces · Una tormenta", student:"Estudiante", teacher:"Maestro/a", about:"Acerca y alineación", progress:"Mi progreso",
+    tag:"Muchas voces · Una tormenta", student:"Estudiante", teacher:"Maestro/a", about:"Acerca y alineación", progress:"Mi progreso", remed:"Centro de estudio", studyThis:"Estudia esta destreza", focusSkills:"Tus destrezas de enfoque", allSkills:"Todas las destrezas de lectura", noFocus:"Aún no hay destrezas de enfoque: completa una sesión y las que falles aparecerán aquí.", watchHere:"Ver aquí", openLink:"Abrir", drill:"Practicar: ejercicio de destreza", teacherPicks:"Elegidos por el maestro", moreHelp:"Más ayuda", remedIntro:"Elige una destreza que fallaste. Mira, lee y luego haz un ejercicio de destreza para demostrar que la dominas.",
     welcome:"ELPA21 Reading Studio", sub:"Práctica de lectura estilo ELPT de Mississippi para aprendices de inglés, K–12",
     name:"Tu nombre", code:"Código de clase (opcional)", band:"Elige tu grado", mode:"Elige una sesión",
     start:"Comenzar sesión", next:"Siguiente", back:"Atrás", flag:"Marcar para revisar", unflag:"Marcada", review:"Revisar", submit:"Entregar prueba", finish:"Terminar",
@@ -1182,6 +1193,7 @@ function render(){
     case "home": body=renderHome(); break;
     case "results": body=renderResults(); break;
     case "progress": body=renderProgress(); break;
+    case "remed": body=renderRemed(); break;
     case "teacher": body=renderTeacher(); break;
     case "about": body=renderAbout(); break;
     case "cert": body=renderCertificate(); break;
@@ -1192,7 +1204,7 @@ function render(){
 }
 function go(view){ S.view=view; render(); }
 function renderTopbar(){
-  const nav=[["home",t("student")],["progress",t("progress")],["teacher",t("teacher")],["about",t("about")]];
+  const nav=[["home",t("student")],["progress",t("progress")],["remed","📚 "+t("remed")],["teacher",t("teacher")],["about",t("about")]];
   return `<header class="topbar">
     <a class="brand" href="#" onclick="A.go('home');return false;"><div class="mark">EL</div><div><div class="t">ELPA21 Reading Studio</div><div class="s">${esc(t("tag"))}</div></div></a>
     <nav class="nav" aria-label="Main">${nav.map(([v,l])=>`<button class="${S.view===v?'active':''}" onclick="A.go('${v}')">${esc(l)}</button>`).join("")}</nav>
@@ -1266,6 +1278,15 @@ const A = {
   cert(){ S.view="cert"; render(); }, print(){ window.print(); },
   again(){ S.session=null; S.view="home"; render(); },
   progressStudent(n){ S.student.name=n; render(); },
+  // remediation
+  remToggle(k,o){ S.remOpen=S.remOpen||{}; S.remOpen[k]=o; },
+  remFocus(k){ S.remOpen=S.remOpen||{}; S.remOpen[k]=true; S.view="remed"; render(); setTimeout(()=>{ const el=document.getElementById("rem-"+k); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); },50); },
+  remEmbed(id){ S.remEmbed = S.remEmbed===id? null : id; render(); },
+  remDrill(k){ S.student.skill=k; S.student.mode="skill"; if(!S.student.band||!S.student.name.trim()){ S.view="home"; render(); toast("Enter your name and grade band, then start the Skill Drill."); return; } startSession(); },
+  rAdd(){ remedAdd(); }, rDel(k,i){ const r=getRemed(); r.links[k].splice(i,1); DB.set("remed",r); render(); }, rReset(){ if(confirm("Remove all teacher links and return to the built-in list?")){ DB.set("remed",{links:{},updated:""}); render(); } },
+  rShare(){ const r=getRemed(); const payload=btoa(unescape(encodeURIComponent(JSON.stringify(r.links)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); const url=location.origin+location.pathname+"#rem="+payload; navigator.clipboard?.writeText(url).then(()=>toast("Share link copied. Post it in Google Classroom; students who open it get your links.")).catch(()=>prompt("Copy this link:",url)); },
+  rExport(){ const r=getRemed(); const blob=new Blob([JSON.stringify(r,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="reading-studio-remediation.json"; a.click(); },
+  rImport(){ const inp=document.createElement("input"); inp.type="file"; inp.accept="application/json"; inp.onchange=()=>{ const f=inp.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ try{ const j=JSON.parse(rd.result); if(j&&j.links){ DB.set("remed",{links:j.links,updated:new Date().toISOString()}); render(); toast("Remediation links imported."); } }catch(e){ toast("That file is not a remediation export."); } }; rd.readAsText(f); }; inp.click(); },
   // teacher
   tTab(x){ S.teacherTab=x; render(); }, tBand(b){ S.teacherBand=b; render(); }, tImport(){ teacherImport(); }, tScan(){ teacherScanDevice(); }, tExport(){ teacherExportCSV(); }, tClear(){ if(confirm("Remove all imported reports from this device's teacher dashboard?")){ const td=getTeacher(); td.reports=[]; DB.set("teacher",td); render(); } },
   tAddClass(){ teacherAddClass(); }, tDelClass(i){ const td=getTeacher(); td.classes.splice(i,1); DB.set("teacher",td); render(); }, tSet(k,v){ S.settings[k]=v; saveSettings(); render(); },
@@ -1274,7 +1295,7 @@ const A = {
 window.A=A;
 
 /* ---------- init ---------- */
-window.addEventListener("DOMContentLoaded", ()=>{ render(); });
+window.addEventListener("DOMContentLoaded", ()=>{ importRemedFromHash(); render(); });
 window.addEventListener("beforeunload", e=>{ if(S.session && !S.session.done){ e.preventDefault(); e.returnValue=""; } });
 
 /* ============================================================
@@ -1514,7 +1535,7 @@ function renderResults(){
   const skRows=breakdownRows(r.bySkill,k=>esc(es?SKILLS[k].es:SKILLS[k].name));
   const tyRows=breakdownRows(r.byType,k=>esc(es?ITEM_TYPES[k].es:ITEM_TYPES[k].name));
   const weakest=Object.entries(r.bySkill).filter(([k,v])=>v.n>=2).sort((a,b)=>pct(a[1].c,a[1].n)-pct(b[1].c,b[1].n))[0];
-  const nextSteps = weakest? `<div class="card tight" style="background:var(--gold-soft)"><h3>🎯 Next step</h3><p class="small">Lowest skill this session: <b>${esc(SKILLS[weakest[0]].name)}</b> (${pct(weakest[1].c,weakest[1].n)}%). Run a <b>Skill Drill</b> on it, then retake a Quick Check.</p><button class="btn sm" onclick="S.student.mode='skill';S.student.skill='${weakest[0]}';A.go('home')">Start drill: ${esc(SKILLS[weakest[0]].name)}</button></div>`:"";
+  const nextSteps = weakest? `<div class="card tight" style="background:var(--gold-soft)"><h3>🎯 Next step</h3><p class="small">Lowest skill this session: <b>${esc(SKILLS[weakest[0]].name)}</b> (${pct(weakest[1].c,weakest[1].n)}%). <button class="btn gold sm" style="margin:.4rem 0" onclick="A.remFocus('${weakest[0]}')">📚 ${esc(t("studyThis"))}</button> Run a <b>Skill Drill</b> on it, then retake a Quick Check.</p><button class="btn sm" onclick="S.student.mode='skill';S.student.skill='${weakest[0]}';A.go('home')">Start drill: ${esc(SKILLS[weakest[0]].name)}</button></div>`:"";
   const review = r.items.map((x,i)=>{ const it=itemById(x.id); const yours=describeAnswer(it,x.ans); const corr=describeAnswer(it,it.answer,true);
     return `<tr><td class="num">${i+1}</td><td>${x.ok?'<span class="pill ok">✔</span>':'<span class="pill bad">✘</span>'}</td><td>${it.stem.replace(/<[^>]+>/g,"").slice(0,110)}${it.stem.length>110?'…':''}<div class="tiny">${esc(SKILLS[it.skill].name)} · ${esc(ITEM_TYPES[it.type].name)} · ${esc(it.std)} · ${esc(it.ela)}</div>${!x.ok? `<div class="tiny mt" style="margin-top:.3rem"><b>${esc(t("yourAns"))}:</b> ${yours} &nbsp; <b>${esc(t("correctAns"))}:</b> ${corr}<br><b>${esc(t("explain"))}:</b> ${it.explain}</div>`:""}</td></tr>`; }).join("");
   const badges = r.newBadges.length? `<div class="card tight"><h3>🏅 New badges</h3><div class="badges">${r.newBadges.map(id=>{ const b=BADGES.find(x=>x.id===id); return `<div class="badge"><div class="e">${b.e}</div><div class="n">${esc(b.n)}</div><div class="d">${esc(b.d)}</div></div>`; }).join("")}</div></div>`:"";
@@ -1570,7 +1591,7 @@ function renderProgress(){
   </div>
   <div class="grid g2 mt">
     <div class="card"><h3>📈 Growth (mock & practice sessions)</h3>${chart}</div>
-    <div class="card"><h3>${esc(t("bySkill"))} — all time</h3><div class="std-list">${breakdownRows(rec.skill,k=>esc(es?SKILLS[k].es:SKILLS[k].name))||'<span class="small">—</span>'}</div><h3 class="mt">${esc(t("byStandard"))}</h3><div class="std-list">${breakdownRows(rec.std,k=>`<b>${esc(k)}</b>`)}</div></div>
+    <div class="card"><h3>${esc(t("bySkill"))} — all time</h3><div class="std-list">${breakdownRows(rec.skill,k=>esc(es?SKILLS[k].es:SKILLS[k].name))||'<span class="small">—</span>'}</div><button class="btn ghost sm mt" onclick="A.go('remed')">📚 ${esc(t("remed"))} →</button><h3 class="mt">${esc(t("byStandard"))}</h3><div class="std-list">${breakdownRows(rec.std,k=>`<b>${esc(k)}</b>`)}</div></div>
   </div>
   <div class="card mt"><h3>🏅 ${esc(t("badges"))} (${rec.badges.length}/${BADGES.length})</h3><div class="badges">${badges}</div></div>
   <div class="card mt"><h3>${esc(t("history"))}</h3><div class="scroll"><table class="table"><thead><tr><th>Date</th><th>Band</th><th>Session</th><th class="num">Score</th><th class="num">%</th><th>Lv</th><th class="num">Min</th></tr></thead><tbody>${hist}</tbody></table></div></div>`;
@@ -1584,6 +1605,87 @@ function growthChart(sessions){
   const dots=pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="var(--gold)" stroke="var(--navy)" stroke-width="2"><title>${fmtDate(p[2].date)} · ${p[2].pct}% · Level ${p[2].level}</title></circle>`).join("");
   const labels=pts.map((p,i)=> (n<=8 || i===0 || i===n-1 || i%Math.ceil(n/6)===0)? `<text x="${p[0]}" y="${h-8}" font-size="10" text-anchor="middle" fill="var(--muted)">${new Date(p[2].date).toLocaleDateString(undefined,{month:"numeric",day:"numeric"})}</text>`:"").join("");
   return `<svg viewBox="0 0 ${w+18} ${h}" width="100%" role="img" aria-label="Percent correct over time">${grid}${levelsBand}<path d="${path}" fill="none" stroke="var(--navy-2)" stroke-width="2.5"/>${dots}${labels}</svg><div class="tiny">Percent correct by session; dashed lines mark estimated level cut points.</div>`;
+}
+
+/* ============================================================
+   Remediation Center: per-skill study links (teacher-managed, shareable)
+   ============================================================ */
+const YT = q => "https://www.youtube.com/results?search_query="+encodeURIComponent(q);
+const KA = q => "https://www.khanacademy.org/search?page_search_query="+encodeURIComponent(q);
+const REMED_DEFAULT = {
+  FND: [ {t:"Phonics for English learners: short vowels and sight words",u:YT("phonics for English learners short vowels sight words"),l:"en"}, {t:"Fonética en inglés para hispanohablantes",u:YT("fonética inglés para hispanohablantes vocales cortas"),l:"es"}, {t:"Khan Academy: letters and sounds",u:KA("phonics"),l:"en"} ],
+  KD:  [ {t:"Finding key details in a text",u:YT("finding key details in a text reading strategy"),l:"en"}, {t:"Detalles clave de un texto (explicación)",u:YT("detalles clave de un texto explicación lectura"),l:"es"}, {t:"Khan Academy: key details",u:KA("key details"),l:"en"} ],
+  MI:  [ {t:"Main idea and supporting details",u:YT("main idea and supporting details lesson"),l:"en"}, {t:"Theme vs. main idea",u:YT("theme vs main idea explained"),l:"en"}, {t:"Idea principal y tema de un texto",u:YT("idea principal y tema de un texto explicación"),l:"es"}, {t:"Khan Academy: main idea",u:KA("main idea"),l:"en"} ],
+  INF: [ {t:"Making inferences (text clues + what you know)",u:YT("making inferences reading strategy text clues"),l:"en"}, {t:"Hacer inferencias al leer",u:YT("hacer inferencias al leer explicación"),l:"es"}, {t:"Khan Academy: inference",u:KA("inference"),l:"en"} ],
+  VOC: [ {t:"Context clues: figuring out unknown words",u:YT("context clues strategies unknown words"),l:"en"}, {t:"Prefixes, suffixes and roots",u:YT("prefixes suffixes root words lesson"),l:"en"}, {t:"Cognados inglés-español para vocabulario académico",u:YT("cognados inglés español vocabulario académico"),l:"es"}, {t:"Khan Academy: vocabulary in context",u:KA("context clues"),l:"en"} ],
+  SEQ: [ {t:"Text structure: sequence, cause/effect, compare/contrast",u:YT("text structure sequence cause effect compare contrast lesson"),l:"en"}, {t:"Transition words and order of events",u:YT("transition words sequence of events reading"),l:"en"}, {t:"Estructura del texto y secuencia",u:YT("estructura del texto secuencia causa efecto"),l:"es"}, {t:"Khan Academy: text structure",u:KA("text structure"),l:"en"} ],
+  ARG: [ {t:"Claim, reasons and evidence",u:YT("claim reasons evidence argument reading lesson"),l:"en"}, {t:"Evaluating an argument: is the evidence enough?",u:YT("evaluating arguments evidence sufficient relevant"),l:"en"}, {t:"Afirmación, razones y evidencia",u:YT("afirmación razones y evidencia texto argumentativo"),l:"es"}, {t:"Khan Academy: evaluating arguments",u:KA("evaluating arguments"),l:"en"} ],
+  PROC:[ {t:"Reading instructions, schedules and forms",u:YT("reading procedural text instructions schedules forms ESL"),l:"en"}, {t:"Textos funcionales: instrucciones, horarios y formularios",u:YT("textos funcionales instrucciones horarios formularios"),l:"es"}, {t:"Khan Academy: functional texts",u:KA("procedural text"),l:"en"} ]
+};
+function getRemed(){ const r=DB.get("remed",{links:{},updated:""}); r.links=r.links||{}; return r; }
+function remedLinks(k){ const r=getRemed(); return { teacher:(r.links[k]||[]), builtin:(REMED_DEFAULT[k]||[]) }; }
+function ytId(u){ const m=(u||"").match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/); return m? m[1] : null; }
+function remedAdd(){
+  const k=$("#rk").value, t=$("#rt").value.trim(), u=$("#ru").value.trim(), l=$("#rl").value, n=$("#rn").value.trim();
+  if(!t||!u){ toast("Add a title and a link."); return; }
+  if(!/^https?:\/\//i.test(u)){ toast("Links must start with http:// or https://"); return; }
+  const r=getRemed(); r.links[k]=r.links[k]||[]; r.links[k].push({t,u,l,n}); r.updated=new Date().toISOString(); DB.set("remed",r); render(); toast("Added to "+SKILLS[k].name+".");
+}
+function importRemedFromHash(){
+  const m=location.hash.match(/[#&]rem=([A-Za-z0-9_-]+)/); if(!m) return;
+  try{ const b=m[1].replace(/-/g,"+").replace(/_/g,"/"); const json=decodeURIComponent(escape(atob(b+"===".slice((b.length+3)%4)))); const links=JSON.parse(json);
+    if(links&&typeof links==="object"){ DB.set("remed",{links,updated:new Date().toISOString()}); toast("Study links updated from your teacher's link."); }
+  }catch(e){ toast("Could not read the study-link code."); }
+  history.replaceState(null,"",location.pathname+location.search);
+}
+function studentSkillStats(){
+  const name=S.student.name.trim(); if(!name) return null; const all=getStudents(); const rec=all[studentKey(name)]; return rec? rec.skill : null;
+}
+function remedCard(k, stat, open){
+  const es=S.settings.lang==="es"; const sk=SKILLS[k]; const {teacher,builtin}=remedLinks(k);
+  const p = stat && stat.n? pct(stat.c,stat.n) : null;
+  const badge = p==null? `<span class="pill">no data</span>` : `<span class="pill ${p<70?'bad':p<85?'':'ok'}">${p}% (${stat.c}/${stat.n})</span>`;
+  const row=(x,i,src)=>{ const id=ytId(x.u); const key=k+":"+src+":"+i; const lang=x.l==="es"?"ES":x.l==="en"?"EN":"EN·ES";
+    return `<li class="rem-link"><div class="rem-main"><span class="rem-lang">${lang}</span><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)}</a>${x.n?`<div class="tiny">${esc(x.n)}</div>`:""}</div>
+      <div class="row" style="gap:.4rem">${id?`<button class="btn ghost sm" onclick="A.remEmbed('${key}')">▶ ${esc(t("watchHere"))}</button>`:""}<a class="btn ghost sm" href="${esc(x.u)}" target="_blank" rel="noopener">↗ ${esc(t("openLink"))}</a></div>
+      ${id&&S.remEmbed===key?`<div class="rem-embed"><iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0" title="${esc(x.t)}" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`:""}</li>`; };
+  const isOpen = open || (S.remOpen&&S.remOpen[k]);
+  return `<details class="card rem-card" id="rem-${k}" ${isOpen?'open':''} ontoggle="A.remToggle('${k}',this.open)"><summary><div class="row between"><div><b>${esc(es?sk.es:sk.name)}</b><div class="tiny">${esc(sk.short)}</div></div>${badge}</div></summary>
+    ${teacher.length?`<div class="eyebrow mt">${esc(t("teacherPicks"))}</div><ul class="rem-list">${teacher.map((x,i)=>row(x,i,"t")).join("")}</ul>`:""}
+    <div class="eyebrow mt">${esc(t("moreHelp"))}</div><ul class="rem-list">${builtin.map((x,i)=>row(x,i,"b")).join("")}</ul>
+    <button class="btn gold sm mt" onclick="A.remDrill('${k}')">🎯 ${esc(t("drill"))}</button></details>`;
+}
+function renderRemed(){
+  const stats=studentSkillStats(); const es=S.settings.lang==="es";
+  const keys=Object.keys(SKILLS);
+  const focus = stats? keys.filter(k=>stats[k]&&stats[k].n>=3&&pct(stats[k].c,stats[k].n)<70).sort((a,b)=>pct(stats[a].c,stats[a].n)-pct(stats[b].c,stats[b].n)) : [];
+  const r=getRemed(); const nTeacher=Object.values(r.links).reduce((a,b)=>a+b.length,0);
+  const who = S.student.name.trim()? `<span class="pill">${esc(S.student.name.trim())}</span>` : `<span class="small">Enter your name on the Student tab to see your own focus skills.</span>`;
+  const focusHtml = focus.length? focus.map(k=>remedCard(k,stats[k],true)).join("") : `<div class="card tight"><p class="small">${esc(t("noFocus"))}</p></div>`;
+  const rest = keys.filter(k=>!focus.includes(k)).map(k=>remedCard(k, stats? stats[k]:null, false)).join("");
+  const out=`<div class="row between mb"><div><div class="eyebrow">📚 ${esc(t("remed"))}</div><h1>${esc(t("remedIntro"))}</h1></div>${who}</div>
+    <div class="tiny mb">${nTeacher? nTeacher+" teacher-picked link"+(nTeacher===1?"":"s")+" on this device · " : ""}Videos open on YouTube or play here; your school filter decides what loads.</div>
+    <h2 class="mt">🎯 ${esc(t("focusSkills"))}</h2>${focusHtml}
+    <h2 class="mt">${esc(t("allSkills"))}</h2>${rest}`;
+  return out;
+}
+function renderTeacherRemed(){
+  const r=getRemed(); const keys=Object.keys(SKILLS);
+  const list=keys.map(k=>{ const L=r.links[k]||[]; return `<div class="card tight"><div class="row between"><b>${esc(SKILLS[k].name)}</b><span class="tiny">${L.length} teacher link${L.length===1?"":"s"} · ${(REMED_DEFAULT[k]||[]).length} built-in</span></div>
+    ${L.length?`<ul class="rem-list">${L.map((x,i)=>`<li class="rem-link"><div class="rem-main"><span class="rem-lang">${x.l==="es"?"ES":x.l==="en"?"EN":"EN·ES"}</span><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)}</a>${x.n?`<div class="tiny">${esc(x.n)}</div>`:""}</div><button class="btn ghost sm" onclick="A.rDel('${k}',${i})">✕</button></li>`).join("")}</ul>`:`<p class="tiny" style="margin:.4rem 0 0">No teacher links yet — students see the built-in list.</p>`}</div>`; }).join("");
+  return `<div class="grid g2">
+    <div class="card"><h3>Add a study link</h3><p class="small">Paste a YouTube video, a Google Doc, a Quizlet set, a Nearpod, anything with a link. YouTube videos also play inside the Studio.</p>
+      <div class="field"><label class="f" for="rk">Skill</label><select id="rk">${keys.map(k=>`<option value="${k}">${esc(SKILLS[k].name)}</option>`).join("")}</select></div>
+      <div class="field"><label class="f" for="rt">Title students will see</label><input id="rt" placeholder="e.g., Main idea in 4 minutes"></div>
+      <div class="field"><label class="f" for="ru">Link</label><input id="ru" placeholder="https://www.youtube.com/watch?v=…"></div>
+      <div class="row"><div class="field" style="flex:1"><label class="f" for="rl">Language</label><select id="rl"><option value="en">English</option><option value="es">Spanish</option><option value="both">Both</option></select></div>
+      <div class="field" style="flex:2"><label class="f" for="rn">Note (optional)</label><input id="rn" placeholder="Watch to 3:10, then try the drill"></div></div>
+      <button class="btn gold" onclick="A.rAdd()">➕ Add link</button></div>
+    <div class="card"><h3>Get links to students</h3><p class="small">Links live on this device. To put the same list on every Chromebook, copy the share link and post it in Google Classroom — opening it loads your list on that device.</p>
+      <div class="row" style="flex-wrap:wrap;gap:.5rem"><button class="btn gold" onclick="A.rShare()">🔗 Copy share link</button><button class="btn ghost" onclick="A.rExport()">⬇ Export JSON</button><button class="btn ghost" onclick="A.rImport()">⬆ Import JSON</button><button class="btn ghost" onclick="A.rReset()">↺ Reset to built-in</button></div>
+      ${r.updated?`<p class="tiny mt">Last changed ${fmtDate(r.updated)}</p>`:""}
+      <h3 class="mt">How students see it</h3><p class="small">The <b>📚 Study Center</b> tab lists every skill. Skills under 70% for that student rise to the top as <b>focus skills</b>. The results page also shows a <b>Study this skill</b> button for the lowest skill of the session. Each skill ends with a one-click Skill Drill so students can prove it.</p></div>
+  </div><h2 class="mt">Links by skill</h2>${list}`;
 }
 /* ---------- certificate ---------- */
 function renderCertificate(){
@@ -1642,7 +1744,7 @@ function teacherExportCSV(){
 function heatClass(p){ return p==null? "" : p<35?"h0":p<55?"h1":p<70?"h2":p<85?"h3":"h4"; }
 function renderTeacher(){
   if(!S.teacherOpen) return `<h1>${esc(t("teacher"))}</h1><div class="card" style="max-width:560px"><p class="small">The teacher dashboard imports student report codes, builds a roster and mastery heatmap, runs item analysis, and exports CSV. ${S.settings.teacherPin? "Enter your PIN to open it." : "No PIN is set yet — you can add one in Settings once inside."}</p><button class="btn gold" onclick="A.tOpen()">🔓 Open dashboard</button></div>`;
-  const td=getTeacher(); const tabs=[["roster","👥 Roster"],["mastery","🔥 Mastery heatmap"],["standards","📐 Standards"],["items","🧪 Item analysis"],["classes","🏷️ Classes & import"],["settings","⚙️ Settings"]];
+  const td=getTeacher(); const tabs=[["roster","👥 Roster"],["mastery","🔥 Mastery heatmap"],["standards","📐 Standards"],["items","🧪 Item analysis"],["classes","🏷️ Classes & import"],["remed","📚 Remediation"],["settings","⚙️ Settings"]];
   const tabBar=`<div class="tabs">${tabs.map(([k,l])=>`<button class="${S.teacherTab===k?'active':''}" onclick="A.tTab('${k}')">${l}</button>`).join("")}</div>`;
   let body="";
   const reports=td.reports.slice().sort((a,b)=>a.date<b.date?1:-1);
@@ -1683,6 +1785,7 @@ function renderTeacher(){
         <table class="table mt"><tbody>${td.classes.map((c,i)=>`<tr><td><b>${esc(c.code)}</b></td><td>${esc(c.name)}</td><td>${esc(bandById(c.band)?.short||"")}</td><td class="num">${reports.filter(r=>r.code===c.code).length} reports</td><td><button class="btn sm ghost" onclick="A.tDelClass(${i})">✕</button></td></tr>`).join("")||'<tr><td class="small">No classes yet.</td></tr>'}</tbody></table>
         <h3 class="mt2">Collect codes with Google Forms</h3><p class="small">Create a Form with three short-answer questions — <i>Name</i>, <i>Class code</i>, <i>Report code</i> — and post the link in Google Classroom. Open the responses sheet, copy the Report code column, and paste it into the import box. Each report is only a few hundred characters.</p></div></div>`;
   }
+  if(S.teacherTab==="remed"){ body=renderTeacherRemed(); }
   if(S.teacherTab==="settings"){
     body = `<div class="grid g2"><div class="card"><h3>Test conditions</h3>
       <label class="check"><input type="checkbox" ${S.settings.lockScaffoldsInMock?'checked':''} onchange="A.tSet('lockScaffoldsInMock',this.checked)"> Turn off Spanish stems and glossary automatically in Full Mock Test</label>
